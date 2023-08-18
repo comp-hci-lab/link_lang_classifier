@@ -3,7 +3,7 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
   alias LinkLangClassifier.Finch, as: MyFinch
 
   @default_map %{"ru" => %{is_checked: false, name: "Russian"},"en" => %{is_checked: false, name: "English"},"kg" => %{is_checked: false, name: "Kyrgyz"}}
-
+  @submit_button_wait_ms 15000
 
   @impl true
   def mount(_params, _session, socket) do
@@ -21,35 +21,20 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
           other_isChecked: false, 
           time_up: false
         )
-    task = Task.async(fn -> 
-      send(self(), {:time_up, true})
-    end)
-       
+    
+    Process.send_after(self(), {:time_up, true}, @submit_button_wait_ms)
+    
     {:ok, socket, layout: false}
  
   end
 
-
   @impl true
   def handle_info({task_id, return_value}, socket) do
     IO.inspect("handling")
-    time_up = socket.assigns.time_up
     
-    socket = if !time_up do
-      :timer.sleep(15000)
-      assign(socket, :time_up, true)
-    else
-      socket
-    end
-
-    task = Task.async(fn -> 
-      :timer.sleep(1000)
-      send(self(), {:time_up, false})
-    end)
-
-    {:noreply, socket}
+    {:noreply, assign(socket, :time_up, true)}
   end
-  
+
   def handle_info({_, _, _, _, _} = details, socket) do
     IO.inspect(details)
     {:noreply, socket}
@@ -144,6 +129,7 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
         result = get_next_link(user_id)
         socket = put_flash(socket, :info, "Classified successfully.")
         new_count = count(user_id)
+        Process.send_after(self(), {:time_up, true}, @submit_button_wait_ms)
         {:noreply, assign(socket, link: result, langs: @default_map, count: new_count, other_isChecked: false, none_isChecked: false, time_up: false)}
     end
   end

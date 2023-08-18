@@ -23,7 +23,7 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
         )
     
     Process.send_after(self(), {:time_up, true}, @submit_button_wait_ms)
-    
+
     {:ok, socket, layout: false}
  
   end
@@ -130,7 +130,7 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
         socket = put_flash(socket, :info, "Classified successfully.")
         new_count = count(user_id)
         Process.send_after(self(), {:time_up, true}, @submit_button_wait_ms)
-        {:noreply, assign(socket, link: result, langs: @default_map, count: new_count, other_isChecked: false, none_isChecked: false, time_up: false)}
+        {:noreply, assign(socket, link: result, langs: @default_map, count: new_count, other_isChecked: false, none_isChecked: false, text_value: "", time_up: false)}
     end
   end
 

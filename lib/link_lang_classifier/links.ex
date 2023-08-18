@@ -99,6 +99,7 @@ defmodule LinkLangClassifier.Links do
     |> join(:left, [l], c in Classification, on: c.link_id == l.id and c.classifier_id == ^user_id)
     |> where([l, c], is_nil(c.id))
     |> select([l,c], l)
+    |> order_by(fragment("RANDOM()"))
     |> first()
     |> Repo.one()
   end

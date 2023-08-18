@@ -36,7 +36,7 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
     time_up = socket.assigns.time_up
     
     socket = if !time_up do
-      :timer.sleep(5000)
+      :timer.sleep(15000)
       assign(socket, :time_up, true)
     else
       socket
@@ -49,13 +49,7 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
 
     {:noreply, socket}
   end
-
-'''
-  def handle_info({_}, socket) do 
-    IO.inspect("good grief")
-    {:noreply, socket}
-  end
-'''
+  
   def handle_info({_, _, _, _, _} = details, socket) do
     IO.inspect(details)
     {:noreply, socket}

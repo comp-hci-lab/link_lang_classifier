@@ -58,7 +58,7 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
   end
 
   def count(user_id) do 
-    res = (LinkLangClassifier.Links.count_classifications(user_id) / LinkLangClassifier.Links.count_links()) * 100 
+    res = (LinkLangClassifier.Links.count_classifications(user_id) / LinkLangClassifier.Links.count_links(user_id)) * 100 
     |> Decimal.from_float()
     |> Decimal.round(2)
   end
@@ -125,7 +125,7 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
         {:noreply,  put_flash(socket, :error, "Language is not choosen")}
       lang ->
         id
-        |> LinkLangClassifier.Links.classify(lang, user_id)
+        |> LinkLangClassifier.Links.classify(lang)
         result = get_next_link(user_id)
         socket = put_flash(socket, :info, "Classified successfully.")
         new_count = count(user_id)

@@ -12,7 +12,9 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
   def mount(_params, _session, socket) do
     langs = @default_map
     user_id = socket.assigns.current_user.id
-    result = get_next_link(user_id)
+
+    result = get_existing_video(user_id)
+
     links_count = count_progress(user_id)
     payment_count = count_payment(user_id)
 
@@ -28,6 +30,19 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
      ), layout: false}
   end
 
+  def get_existing_video(user_id) do
+    link = get_next_link(user_id)
+
+    if(Map.has_key?(link, :video)) do
+      link
+    else
+      link.id
+      |> LinkLangClassifier.Links.classify("non_exist", user_id)
+
+      get_existing_video(user_id)
+    end
+  end
+
   def get_next_link(user_id) do
     # 1. Get next link from DB
     with %LinkLangClassifier.Links.Link{} = link <-
@@ -41,8 +56,6 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
       {:ok, required_tags} = parse_html(html)
       all_tags = Floki.find(required_tags, "meta")
 
-      IO.inspect(all_tags)
-      # 4. Put the required fields to a map and return
       all_tags
       |> Enum.map(fn {_, list, _} -> list end)
       |> Enum.filter(fn [{name, _} | _] -> name == "property" end)
@@ -72,25 +85,55 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
     [{"content", val} | _] = tl(list)
 
     case p_name do
-      "og:title" -> Map.put(acc, :title, val)
+      "og:url" ->
+        video_hash = get_hash(val)
+
+        video_url = "https://www.youtube.com/embed/" <> video_hash
+        Map.put(acc, :video, video_url)
+
+      # "og:title" -> Map.put(acc, :title, val)
       # "og:description" -> Map.put(acc, :desc, val)
-      "og:video:url" -> Map.put(acc, :video, val)
-      _ -> acc
+      # "og:video:url" ->
+      #   Map.put(acc, :video, val)
+      _ ->
+        acc
+    end
+  end
+
+  defp get_hash(url) do
+    cond do
+      String.contains?(url, "watch?v=") ->
+        parse_url(url, "watch?v=")
+
+      String.contains?(url, "shorts") ->
+        parse_url(url, "shorts")
+    end
+  end
+
+  defp parse_url(url, args) do
+    [_, split_args] = String.split(url, args)
+
+    if(String.contains?(split_args, "&")) do
+      [split_asterisk, _] = String.split(url, "&")
+      split_asterisk
+    else
+      split_args
     end
   end
 
   def handle_event("other-event", %{"value" => other_text}, socket) do
+    socket = clear_flash(socket)
     other_isChecked = not socket.assigns.other_isChecked
     none_isChecked = if other_isChecked, do: false, else: socket.assigns.none_isChecked
-    IO.inspect(other_isChecked)
+
     {:noreply, assign(socket, other_isChecked: other_isChecked, none_isChecked: none_isChecked)}
   end
 
   def handle_event("none-btn-event", %{"value" => other_text}, socket) do
+    socket = clear_flash(socket)
     none_isChecked = not socket.assigns.none_isChecked
     other_isChecked = if none_isChecked, do: false, else: socket.assigns.other_isChecked
     langs = if none_isChecked, do: @default_map, else: socket.assigns.langs
-    IO.inspect(other_isChecked)
 
     {:noreply,
      assign(socket,
@@ -101,7 +144,7 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
   end
 
   def handle_event("other-change", %{"value" => msg}, socket) do
-    IO.inspect(msg)
+    socket = clear_flash(socket)
     {:noreply, assign(socket, text_value: msg)}
   end
 
@@ -131,13 +174,14 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
 
     case res do
       "" ->
-        {:noreply, put_flash(socket, :error, "Language is not choosen")}
+        {:noreply, put_flash(socket, :error, "Language is not chosen")}
 
       lang ->
         id
         |> LinkLangClassifier.Links.classify(lang, user_id)
 
-        result = get_next_link(user_id)
+        result = get_existing_video(user_id)
+
         socket = put_flash(socket, :info, "Classified successfully.")
         new_links_count = count_progress(user_id)
         new_payment_count = count_payment(user_id)
@@ -156,19 +200,18 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
 
   @impl true
   def handle_event("btn-event", %{"lang" => lang}, socket) do
+    socket = clear_flash(socket)
+
     langs = socket.assigns.langs
     params = Map.get(langs, lang)
 
     value_checked = Map.get(params, :is_checked)
-    IO.inspect(value_checked)
     none_isChecked = if value_checked, do: socket.assigns.none_isChecked, else: false
 
     new_params = Map.put(params, :is_checked, !value_checked)
-    IO.inspect(new_params)
 
     new_langs = Map.put(langs, lang, new_params)
 
-    IO.inspect(new_langs)
     {:noreply, assign(socket, langs: new_langs, none_isChecked: none_isChecked)}
   end
 end

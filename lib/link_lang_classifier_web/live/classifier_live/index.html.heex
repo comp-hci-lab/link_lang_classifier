@@ -95,8 +95,15 @@
       <button
         phx-click="submit-event"
         phx-value-id={@link.id}
-        class="bg-green-700 rounded-xl mx-auto px-32 text-lg shadow-lg shadow-green-200 active:scale-95 hover:shadow-green-200 hover:shadow-xl py-2 text-white ring-green-700 hover:ring hover:bg-green-600 hover:scale-[98%] anim"
-      >
+        disabled={not @time_up}
+        class={
+             [
+              "rounded-xl mx-auto px-32 text-lg shadow-lg anim active:scale-95 py-2 text-white",
+              not @time_up && "bg-stone-400 shadow-stone-200 ring-stone-700",
+              @time_up && "bg-green-700 shadow-green-200 hover:shadow-green-200 hover:shadow-xl ring-green-700 hover:ring hover:bg-green-600 hover:scale-[98%]"
+             ]
+          }
+        >
         Submit
       </button>
     <% end %>

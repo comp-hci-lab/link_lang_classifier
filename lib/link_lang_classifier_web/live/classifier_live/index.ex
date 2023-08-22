@@ -8,6 +8,8 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
     "kg" => %{is_checked: false, name: "Kyrgyz"}
   }
 
+  @submit_button_wait_ms 15000
+
   @impl true
   def mount(_params, _session, socket) do
     langs = @default_map
@@ -18,16 +20,33 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
     links_count = count_progress(user_id)
     payment_count = count_payment(user_id)
 
-    {:ok,
-     assign(socket,
-       langs: langs,
-       links_count: links_count,
-       payment_count: payment_count,
-       link: result,
-       text_value: "",
-       none_isChecked: false,
-       other_isChecked: false
-     ), layout: false}
+    Process.send_after(self(), {:time_up, true}, @submit_button_wait_ms)
+
+    socket =
+      assign(socket,
+        langs: langs,
+        links_count: links_count,
+        payment_count: payment_count,
+        link: result,
+        text_value: "",
+        none_isChecked: false,
+        other_isChecked: false,
+        time_up: false
+      )
+
+    {:ok, socket, layout: false}
+  end
+
+  @impl true
+  def handle_info({task_id, return_value}, socket) do
+    IO.inspect("handling")
+
+    {:noreply, assign(socket, :time_up, true)}
+  end
+
+  def handle_info({_, _, _, _, _} = details, socket) do
+    IO.inspect(details)
+    {:noreply, socket}
   end
 
   def get_existing_video(user_id) do
@@ -186,6 +205,8 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
         new_links_count = count_progress(user_id)
         new_payment_count = count_payment(user_id)
 
+        Process.send_after(self(), {:time_up, true}, @submit_button_wait_ms)
+
         {:noreply,
          assign(socket,
            link: result,
@@ -193,7 +214,8 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
            none_isChecked: false,
            other_isChecked: false,
            links_count: new_links_count,
-           payment_count: new_payment_count
+           payment_count: new_payment_count,
+           time_up: false
          )}
     end
   end

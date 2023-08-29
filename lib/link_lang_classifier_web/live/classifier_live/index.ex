@@ -3,7 +3,7 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
   alias LinkLangClassifier.Finch, as: MyFinch
 
   @default_map %{"ru" => %{is_checked: false, name: "Russian"},"en" => %{is_checked: false, name: "English"},"kg" => %{is_checked: false, name: "Kyrgyz"},
-    "unknown" => %{is_checked: false, name: "Unknown Language"},"unavail" => %{is_checked: false, name: "Video Unavailable"}}
+    "unknown" => %{is_checked: false, name: "Unknown Language"},"unreachable" => %{is_checked: false, name: "Video Unavailable"}}
   @submit_button_wait_ms 15000
 
   @impl true

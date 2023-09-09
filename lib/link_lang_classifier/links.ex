@@ -131,11 +131,13 @@ defmodule LinkLangClassifier.Links do
       100
 
   """
+
   def count_links(user_id) do
     query = from l in Link,
       where: l.classifier_id == ^user_id
     length(Repo.all(query))
   end 
+
 
   @doc """
   Returns the total number of classifications.
@@ -151,8 +153,7 @@ defmodule LinkLangClassifier.Links do
       join: l in Link, on: c.link_id == l.id,
       where: l.classifier_id == ^user_id
     length(Repo.all(query))
-  end 
-
+  end
 end
 
 # from links as l

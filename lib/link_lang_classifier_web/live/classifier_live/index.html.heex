@@ -1,20 +1,26 @@
 <div class="min-h-screen bg-slate-100 flex">
   <div class="2xl:mx-72 px-10 py-8 min-h-max flex-1 flex flex-col space-y-8">
-    <div>
-        <div class="flex justify-between mb-1">
-          <span class="text-base font-medium text-blue-700">Your Labeling Progress:</span>
-          <span class="text-sm font-medium text-blue-700"><%= @count %>%</span>
+    <div class="flex mb-4">
+      <div class="flex mr-2">
+        <span class="font-medium text-blue-700">Your Labeling Progress:</span>
+      </div>
+      <div id="labels_completed_progress" class="flex-1 overflow-hidden bg-gray-700 rounded-full">
+        <div class="bg-blue-600 h-full rounded-full" style={"width:#{@links_count }%"}>
+          <p class="font-medium text-blue-100 text-center"><%= @links_count %>%</p>
         </div>
-        <div id="labels_completed_progress" class="w-full bg-gray-200 rounded-full dark:bg-gray-700">
-          <div class="bg-blue-600 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full" style={"width:#{@count}%"}> <%= @count %>% </div>
-        </div>
+      </div>
+      <div class=" px-4">
+        <span class="text-base font-medium text-blue-700">Your Payment:</span>
+        <span class="text-sm font-medium text-blue-700">$<%= @payment_count %></span>
+      </div>
     </div>
+
     <.flash_group flash={@flash} />
-    <%= if @link == nil do %>
+    <%= if @link==nil do %>
       <h1 class="text-6xl mx-auto text-slate-800 font-bold">You are done</h1>
       <p class="mt-8 text-gray-600 mx-auto">No work for you for now</p>
     <% end %>
-    <%= if @link != nil do %>
+    <%= if @link !=nil do %>
       <a
         class="bg-slate-50 flex shadow hover:shadow-xl hover:ring-1 anim hover:scale-[101%] ring-slate-400 space-x-4 border rounded-md px-8 mx-auto py-7"
         href={@link.url}
@@ -29,26 +35,28 @@
           >
           </iframe>
         </div>
-        <div class="flex flex-col space-y-4">
-          <h2 class="text-2xl font-bold text-slate-800">
-            <%!-- <%= @link.title %> --%>
-          </h2>
-          <p class="text-slate-700">
-            <%!-- <%= @link.desc %> --%>
-          </p>
-        </div>
+        <!--  <div class="flex flex-col space-y-4">
+              <h2 class="text-2xl font-bold text-slate-800">
+                <%!-- <%=@link.title %> --%>
+              </h2>
+              <p class="text-slate-700">
+                <%!-- <%=@link.desc %> --%>
+              </p>
+            </div>
+            -->
       </a>
+      <div phx-window-keydown="clear-flash" phx-key="escape"></div>
+
       <div class="grid grid-cols-3 gap-4">
         <%= for {key, value} <- @langs do %>
           <button
             phx-click="btn-event"
             phx-value-lang={key}
-            class={
-             [
+            class={[
               "choice-button",
-              value.is_checked && "ring-green-300 shadow-green-200 hover:shadow-green-200 bg-green-600 hover:bg-green-700"
-             ]
-            }
+              value.is_checked &&
+                "ring-green-300 shadow-green-200 hover:shadow-green-200 bg-green-600 hover:bg-green-700"
+            ]}
           >
             <%= value.name %>
           </button>
@@ -56,28 +64,33 @@
 
         <button
           phx-click="other-event"
-          class={
-             [
-              "choice-button",
-              @other_isChecked && "ring-green-300 shadow-green-200 hover:shadow-green-200 bg-green-600 hover:bg-green-700"
-             ]
-            }
+          class={[
+            "choice-button",
+            @other_isChecked &&
+              "ring-green-300 shadow-green-200 hover:shadow-green-200 bg-green-600 hover:bg-green-700"
+          ]}
         >
           Other:
-          <input value={@text_value} name="input_value" id="other_text" phx-keyup="other-change" size="15" class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="text"/>
+          <input
+            value={@text_value}
+            name="input_value"
+            id="other_text"
+            phx-keyup="other-change"
+            size="15"
+            class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            type="text"
+          />
         </button>
         <button
           phx-click="none-btn-event"
-           class={
-             [
-              "choice-button",
-              @none_isChecked && "ring-green-300 shadow-green-200 hover:shadow-green-200 bg-green-600 hover:bg-green-700"
-             ]
-            }
+          class={[
+            "choice-button",
+            @none_isChecked &&
+              "ring-green-300 shadow-green-200 hover:shadow-green-200 bg-green-600 hover:bg-green-700"
+          ]}
         >
           No spoken or written language
         </button>
-        
       </div>
       <button
         phx-click="submit-event"

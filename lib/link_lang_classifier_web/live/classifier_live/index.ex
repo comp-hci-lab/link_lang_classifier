@@ -50,11 +50,11 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
   def get_existing_video(user_id) do
     link = get_next_link(user_id)
 
-    if(Map.has_key?(link, :video)) do
+    if(link == nil or Map.has_key?(link, :video)) do
       link
     else
       link.id
-      |> LinkLangClassifier.Links.classify("non_exist", user_id)
+      |> LinkLangClassifier.Links.classify("non_exist")
 
       get_existing_video(user_id)
     end
@@ -81,9 +81,11 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
   end
 
 
-  def count(user_id) do 
-    res = (LinkLangClassifier.Links.count_classifications(user_id) / LinkLangClassifier.Links.count_links(user_id)) * 100 
-
+  def count_progress(user_id) do 
+    (LinkLangClassifier.Links.count_classifications(user_id) / LinkLangClassifier.Links.count_links(user_id)) * 100 
+    |> Decimal.from_float()
+    |> Decimal.round(2)
+  end
 
   def count_payment(user_id) do
     (LinkLangClassifier.Links.count_classifications(user_id) * 0.06)
@@ -206,7 +208,7 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
 
         Process.send_after(self(), {:time_up, true}, @submit_button_wait_ms)
 
-        {:noreply, assign(socket, link: result, langs: @default_map, payment_count: new_payment_count, count: new_count, other_isChecked: false, none_isChecked: false, text_value: "", time_up: false)}
+        {:noreply, assign(socket, link: result, langs: @default_map, payment_count: new_payment_count, links_count: new_links_count, other_isChecked: false, none_isChecked: false, text_value: "", time_up: false)}
     end
   end
 

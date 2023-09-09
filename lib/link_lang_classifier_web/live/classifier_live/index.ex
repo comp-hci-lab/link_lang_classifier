@@ -2,11 +2,9 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
   use LinkLangClassifierWeb, :live_view
   alias LinkLangClassifier.Finch, as: MyFinch
 
-  @default_map %{
-    "ru" => %{is_checked: false, name: "Russian"},
-    "en" => %{is_checked: false, name: "English"},
-    "kg" => %{is_checked: false, name: "Kyrgyz"}
-  }
+
+  @default_map %{"ru" => %{is_checked: false, name: "Russian"},"en" => %{is_checked: false, name: "English"},"kg" => %{is_checked: false, name: "Kyrgyz"},
+    "unknown" => %{is_checked: false, name: "Unknown Language"},"unreachable" => %{is_checked: false, name: "Video Unavailable"}}
 
   @submit_button_wait_ms 15000
 
@@ -82,15 +80,13 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
     end
   end
 
-  def count_progress(user_id) do
-    (LinkLangClassifier.Links.count_classifications(user_id) /
-       LinkLangClassifier.Links.count_links() * 100)
-    |> Decimal.from_float()
-    |> Decimal.round(2)
-  end
+
+  def count(user_id) do 
+    res = (LinkLangClassifier.Links.count_classifications(user_id) / LinkLangClassifier.Links.count_links(user_id)) * 100 
+
 
   def count_payment(user_id) do
-    (LinkLangClassifier.Links.count_classifications(user_id) * 0.1)
+    (LinkLangClassifier.Links.count_classifications(user_id) * 0.06)
     |> Decimal.from_float()
     |> Decimal.round(2)
   end
@@ -197,7 +193,10 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
 
       lang ->
         id
-        |> LinkLangClassifier.Links.classify(lang, user_id)
+
+        |> LinkLangClassifier.Links.classify(lang)
+        result = get_next_link(user_id)
+
 
         result = get_existing_video(user_id)
 
@@ -207,16 +206,7 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
 
         Process.send_after(self(), {:time_up, true}, @submit_button_wait_ms)
 
-        {:noreply,
-         assign(socket,
-           link: result,
-           langs: @default_map,
-           none_isChecked: false,
-           other_isChecked: false,
-           links_count: new_links_count,
-           payment_count: new_payment_count,
-           time_up: false
-         )}
+        {:noreply, assign(socket, link: result, langs: @default_map, payment_count: new_payment_count, count: new_count, other_isChecked: false, none_isChecked: false, text_value: "", time_up: false)}
     end
   end
 

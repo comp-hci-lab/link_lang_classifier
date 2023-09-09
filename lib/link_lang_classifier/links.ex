@@ -95,19 +95,30 @@ defmodule LinkLangClassifier.Links do
   end
 
   def get_next_unclassified(user_id) do
+    
+    '''
     Link
-    |> join(:left, [l], c in Classification,
-      on: c.link_id == l.id and c.classifier_id == ^user_id
-    )
+    |> join(:left, [l], c in Classification, on: c.link_id == l.id and l.classifier_id == ^user_id)
     |> where([l, c], is_nil(c.id))
-    |> select([l, c], l)
+    |> select([l,c], l)
+    |> order_by(fragment("RANDOM()"))
     |> first()
     |> Repo.one()
+    '''
+          
+    # query = select * from links l left join classifications c on c.link_id=l.id where l.classifier_id=1 and c.link_id is null;
+    query = from l in Link, 
+      left_join: c in Classification, on: c.link_id==l.id,
+      where: (l.classifier_id==^user_id) and (is_nil(c.link_id)),
+      order_by: (fragment("RANDOM()")),
+      limit: 1
+    Repo.one(query)
+
   end
 
-  def classify(id, lang, user_id) do
+  def classify(id, lang) do
     %Classification{}
-    |> Classification.changeset(%{"category" => lang, "classifier_id" => user_id, "link_id" => id})
+    |> Classification.changeset(%{"category" => lang, "link_id"=>id})
     |> Repo.insert()
   end
 
@@ -120,9 +131,13 @@ defmodule LinkLangClassifier.Links do
       100
 
   """
-  def count_links do
-    length(Repo.all(Link))
-  end
+
+  def count_links(user_id) do
+    query = from l in Link,
+      where: l.classifier_id == ^user_id
+    length(Repo.all(query))
+  end 
+
 
   @doc """
   Returns the total number of classifications.
@@ -134,7 +149,9 @@ defmodule LinkLangClassifier.Links do
 
   """
   def count_classifications(user_id) do
-    query = from c in Classification, where: c.classifier_id == ^user_id
+    query = from c in Classification, 
+      join: l in Link, on: c.link_id == l.id,
+      where: l.classifier_id == ^user_id
     length(Repo.all(query))
   end
 end

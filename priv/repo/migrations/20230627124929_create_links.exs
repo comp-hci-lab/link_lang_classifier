@@ -4,11 +4,11 @@ defmodule LinkLangClassifier.Repo.Migrations.CreateLinks do
   def change do
     create table(:links) do
       add :url, :string
+      add :classifier_id, references(:users)
       timestamps()
     end
 
     create table(:classifications) do
-      add :classifier_id, references(:users)
       add :category, :string
       add :link_id, references(:links)
       #two foreign keys classifier_id (unique constraint) (references)
@@ -17,8 +17,8 @@ defmodule LinkLangClassifier.Repo.Migrations.CreateLinks do
 
     create (
       unique_index(
-        :classifications,
-         [:classifier_id,:link_id]
+        :links,
+         [:classifier_id,:url]
         )
       )
   end

@@ -83,9 +83,11 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
 
 
   def count_progress(user_id) do 
-    (LinkLangClassifier.Links.count_classifications(user_id) / LinkLangClassifier.Links.count_links(user_id)) * 100 
-    |> Decimal.from_float()
-    |> Decimal.round(2)
+    num_links = LinkLangClassifier.Links.count_links(user_id)
+    num_links = if num_links == 0, do: 1, else: num_links
+    (LinkLangClassifier.Links.count_classifications(user_id) / num_links) * 100 
+        |> Decimal.from_float()
+        |> Decimal.round(2)
   end
 
   def count_payment(user_id) do

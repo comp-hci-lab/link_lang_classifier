@@ -247,6 +247,20 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
     res = if other_lang_isChecked && res != "", do: res <> "|" <> socket.assigns.text_value, else: res
     res = if other_lang_isChecked && res == "", do: socket.assigns.text_value, else: res
 
+    ppl = socket.assigns.ppl
+
+    ppl_res =
+      ppl
+      |> Enum.filter(fn {_, %{is_checked: checked_value}} ->
+        checked_value
+      end)
+      |> Enum.map(fn {x, _} -> x end)
+      |> Enum.sort()
+      |> Enum.join("/")
+    ppl_res = if socket.assigns.no_people_isChecked, do: "none", else: ppl_res
+
+    res = if res != "", do: res <> "[]" <> ppl_res
+
     user_id = socket.assigns.current_user.id
 
     case res do
@@ -262,13 +276,12 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
 
         result = get_existing_video(user_id)
 
-        socket = put_flash(socket, :info, "Classified successfully.")
         new_links_count = count_progress(user_id)
         new_payment_count = count_payment(user_id)
 
         Process.send_after(self(), {:time_up, true}, @submit_button_wait_ms)
 
-        {:noreply, assign(socket, link: result, langs: @default_map, payment_count: new_payment_count, links_count: new_links_count, other_lang_isChecked: false, no_lang_isChecked: false, unreachable_isChecked: false, text_value: "", time_up: false)}
+        {:noreply, assign(socket, link: result, langs: @default_lang_map, ppl: @default_ethnicity_map, payment_count: new_payment_count, links_count: new_links_count, other_lang_isChecked: false, no_lang_isChecked: false, unreachable_isChecked: false, text_value: "", no_people_isChecked: false, time_up: false)}
     end
   end
 

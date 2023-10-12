@@ -3,14 +3,18 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
   alias LinkLangClassifier.Finch, as: MyFinch
 
 
-  @default_map %{"ru" => %{is_checked: false, name: "Russian"},"en" => %{is_checked: false, name: "English"},"kg" => %{is_checked: false, name: "Kyrgyz"},
+  @default_lang_map %{"ru" => %{is_checked: false, name: "Russian"},"en" => %{is_checked: false, name: "English"},"kg" => %{is_checked: false, name: "Kyrgyz"},
     "unknown" => %{is_checked: false, name: "Unknown Language"}}
+
+  @default_ethnicity_map %{"sl" => %{is_checked: false, name: "Slavic"},"kg" => %{is_checked: false, name: "Kyrgyz"},"kz" => %{is_checked: false, name: "Kazakh"},
+    "unknown" => %{is_checked: false, name: "Other Ethnicity"}}
 
   @submit_button_wait_ms 15000
 
   @impl true
   def mount(_params, _session, socket) do
-    langs = @default_map
+    langs = @default_lang_map
+    ppl = @default_ethnicity_map
     user_id = socket.assigns.current_user.id
 
     result = get_existing_video(user_id)
@@ -23,15 +27,18 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
     socket =
       assign(socket,
         langs: langs,
+        ppl: ppl,
         links_count: links_count,
         payment_count: payment_count,
         link: result,
         text_value: "",
-        none_isChecked: false,
+        no_lang_isChecked: false,
         unreachable_isChecked: false,
-        other_isChecked: false,
+        other_lang_isChecked: false,
+        no_people_isChecked: false,
         time_up: false
       )
+      
 
     {:ok, socket, layout: false}
   end
@@ -141,26 +148,42 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
     end
   end
 
+  def handle_event("btn-ppl-event", %{"pick" => pick}, socket) do
+    socket = clear_flash(socket)
+
+    ppl = socket.assigns.ppl
+    params = Map.get(ppl, pick)
+
+    value_checked = Map.get(params, :is_checked)
+    no_people_isChecked = if value_checked, do: socket.assigns.no_people_isChecked, else: false
+
+    new_params = Map.put(params, :is_checked, !value_checked)
+
+    new_ppl = Map.put(ppl, pick, new_params)
+
+    {:noreply, assign(socket, ppl: new_ppl, no_people_isChecked: no_people_isChecked)}
+  end
+
   def handle_event("other-event", %{"value" => other_text}, socket) do
     socket = clear_flash(socket)
-    other_isChecked = not socket.assigns.other_isChecked
-    none_isChecked = if other_isChecked, do: false, else: socket.assigns.none_isChecked
-    unreachable_isChecked = if other_isChecked, do: false, else: socket.assigned.unreachable_isChecked
+    other_lang_isChecked = not socket.assigns.other_lang_isChecked
+    no_lang_isChecked = if other_lang_isChecked, do: false, else: socket.assigns.no_lang_isChecked
+    unreachable_isChecked = if other_lang_isChecked, do: false, else: socket.assigned.unreachable_isChecked
 
-    {:noreply, assign(socket, other_isChecked: other_isChecked, none_isChecked: none_isChecked, unreachable_isChecked: unreachable_isChecked)}
+    {:noreply, assign(socket, other_lang_isChecked: other_lang_isChecked, no_lang_isChecked: no_lang_isChecked, unreachable_isChecked: unreachable_isChecked)}
   end
 
   def handle_event("none-btn-event", %{"value" => other_text}, socket) do
     socket = clear_flash(socket)
-    none_isChecked = not socket.assigns.none_isChecked
-    other_isChecked = if none_isChecked, do: false, else: socket.assigns.other_isChecked
-    unreachable_isChecked = if none_isChecked, do: false, else: socket.assigns.unreachable_isChecked
-    langs = if none_isChecked, do: @default_map, else: socket.assigns.langs
+    no_lang_isChecked = not socket.assigns.no_lang_isChecked
+    other_lang_isChecked = if no_lang_isChecked, do: false, else: socket.assigns.other_lang_isChecked
+    unreachable_isChecked = if no_lang_isChecked, do: false, else: socket.assigns.unreachable_isChecked
+    langs = if no_lang_isChecked, do: @default_lang_map, else: socket.assigns.langs
 
     {:noreply,
      assign(socket,
-       other_isChecked: other_isChecked,
-       none_isChecked: none_isChecked,
+       other_lang_isChecked: other_lang_isChecked,
+       no_lang_isChecked: no_lang_isChecked,
        unreachable_isChecked: unreachable_isChecked,
        langs: langs
      )}
@@ -169,18 +192,31 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
   def handle_event("unreachable-btn-event", %{"value" => other_text}, socket) do
     socket = clear_flash(socket)
     unreachable_isChecked = not socket.assigns.unreachable_isChecked
-    other_isChecked = if unreachable_isChecked, do: false, else: socket.assigns.other_isChecked
-    none_isChecked = if unreachable_isChecked, do: false, else: socket.assigns.none_isChecked
-    langs = if unreachable_isChecked, do: @default_map, else: socket.assigns.langs
+    other_lang_isChecked = if unreachable_isChecked, do: false, else: socket.assigns.other_lang_isChecked
+    no_lang_isChecked = if unreachable_isChecked, do: false, else: socket.assigns.no_lang_isChecked
+    langs = if unreachable_isChecked, do: @default_lang_map, else: socket.assigns.langs
 
     {:noreply,
      assign(socket,
-       other_isChecked: other_isChecked,
-       none_isChecked: none_isChecked,
+       other_lang_isChecked: other_lang_isChecked,
+       no_lang_isChecked: no_lang_isChecked,
        unreachable_isChecked: unreachable_isChecked,
        langs: langs
      )}
   end
+
+  def handle_event("no-ppl-btn-event", %{"value" => other_text}, socket) do
+    socket = clear_flash(socket)
+    no_people_isChecked = not socket.assigns.no_people_isChecked
+    ppl = if no_people_isChecked, do: @default_ethnicity_map, else: socket.assigns.langs
+
+    {:noreply,
+     assign(socket,
+       no_people_isChecked: no_people_isChecked,
+       ppl: ppl
+     )}
+  end
+
 
   def handle_event("other-change", %{"value" => msg}, socket) do
     socket = clear_flash(socket)
@@ -202,14 +238,14 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
       |> Enum.sort()
       |> Enum.join("/")
 
-    none_isChecked = socket.assigns.none_isChecked
+    no_lang_isChecked = socket.assigns.no_lang_isChecked
     unreachable_isChecked = socket.assigns.unreachable_isChecked
-    res = if none_isChecked, do: "none", else: res
+    res = if no_lang_isChecked, do: "none", else: res
     res = if unreachable_isChecked, do: "unreachable", else: res
 
-    other_isChecked = socket.assigns.other_isChecked
-    res = if other_isChecked && res != "", do: res <> "|" <> socket.assigns.text_value, else: res
-    res = if other_isChecked && res == "", do: socket.assigns.text_value, else: res
+    other_lang_isChecked = socket.assigns.other_lang_isChecked
+    res = if other_lang_isChecked && res != "", do: res <> "|" <> socket.assigns.text_value, else: res
+    res = if other_lang_isChecked && res == "", do: socket.assigns.text_value, else: res
 
     user_id = socket.assigns.current_user.id
 
@@ -232,7 +268,7 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
 
         Process.send_after(self(), {:time_up, true}, @submit_button_wait_ms)
 
-        {:noreply, assign(socket, link: result, langs: @default_map, payment_count: new_payment_count, links_count: new_links_count, other_isChecked: false, none_isChecked: false, unreachable_isChecked: false, text_value: "", time_up: false)}
+        {:noreply, assign(socket, link: result, langs: @default_map, payment_count: new_payment_count, links_count: new_links_count, other_lang_isChecked: false, no_lang_isChecked: false, unreachable_isChecked: false, text_value: "", time_up: false)}
     end
   end
 
@@ -244,13 +280,14 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
     params = Map.get(langs, lang)
 
     value_checked = Map.get(params, :is_checked)
-    none_isChecked = if value_checked, do: socket.assigns.none_isChecked, else: false
+    no_lang_isChecked = if value_checked, do: socket.assigns.no_lang_isChecked, else: false
     unreachable_isChecked = if value_checked, do: socket.assigns.unreachable_isChecked, else: false
 
     new_params = Map.put(params, :is_checked, !value_checked)
 
     new_langs = Map.put(langs, lang, new_params)
 
-    {:noreply, assign(socket, langs: new_langs, none_isChecked: none_isChecked, unreachable_isChecked: unreachable_isChecked)}
+    {:noreply, assign(socket, langs: new_langs, no_lang_isChecked: no_lang_isChecked, unreachable_isChecked: unreachable_isChecked)}
   end
+
 end

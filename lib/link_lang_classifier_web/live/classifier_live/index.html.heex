@@ -46,8 +46,8 @@
             -->
       </a>
       <div phx-window-keydown="clear-flash" phx-key="escape"></div>
-
-      <div class="grid grid-cols-3 gap-4">
+      <p class="text-xl">Languages Spoken or Written</p>
+      <div class="grid grid-cols-4 gap-4">
         <%= for {key, value} <- @langs do %>
           <button
             phx-click="btn-event"
@@ -66,7 +66,7 @@
           phx-click="other-event"
           class={[
             "choice-button",
-            @other_isChecked &&
+            @other_lang_isChecked &&
               "ring-green-300 shadow-green-200 hover:shadow-green-200 bg-green-600 hover:bg-green-700"
           ]}
         >
@@ -85,7 +85,7 @@
           phx-click="none-btn-event"
           class={[
             "choice-button",
-            @none_isChecked &&
+            @no_lang_isChecked &&
               "ring-green-300 shadow-green-200 hover:shadow-green-200 bg-green-600 hover:bg-green-700"
           ]}
         >
@@ -102,6 +102,33 @@
           Video Unavailable
         </button> 
       </div>
+      <p class="text-xl">Ethnicity of People in Video</p>
+      <div class="grid grid-cols-3 gap-4">
+      <%= for {key, value} <- @ppl do %>
+          <button
+            phx-click="btn-ppl-event"
+            phx-value-pick={key}
+            class={[
+              "choice-button",
+              value.is_checked &&
+                "ring-green-300 shadow-green-200 hover:shadow-green-200 bg-green-600 hover:bg-green-700"
+            ]}
+          >
+            <%= value.name %>
+          </button>
+        <% end %>
+        <button
+          phx-click="no-ppl-btn-event"
+          class={[
+            "choice-button",
+            @no_people_isChecked &&
+              "ring-green-300 shadow-green-200 hover:shadow-green-200 bg-green-600 hover:bg-green-700"
+          ]}
+        >
+          No People Present
+        </button>
+      </div>
+
       <button
         phx-click="submit-event"
         phx-value-id={@link.id}

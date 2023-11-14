@@ -6,8 +6,8 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
   @default_lang_map %{"ru" => %{is_checked: false, name: "Russian"},"en" => %{is_checked: false, name: "English"},"kg" => %{is_checked: false, name: "Kyrgyz"},
     "unknown" => %{is_checked: false, name: "Unknown Language"}}
 
-  @default_ethnicity_map %{"sl" => %{is_checked: false, name: "Slavic"},"kg" => %{is_checked: false, name: "Kyrgyz"},"kz" => %{is_checked: false, name: "Kazakh"},
-    "unknown" => %{is_checked: false, name: "Other Ethnicity"}}
+  @default_ethnicity_map %{"sl" => %{is_checked: false, name: "Slavic"},"kg" => %{is_checked: false, name: "Kyrgyz"},"oca" => %{is_checked: false, name: "Other Central Asian"},
+    "pcau" => %{is_checked: false, name: "Person from Caucasus"}, "unknown" => %{is_checked: false, name: "Other Ethnicity"}}
 
   @submit_button_wait_ms 15000
 

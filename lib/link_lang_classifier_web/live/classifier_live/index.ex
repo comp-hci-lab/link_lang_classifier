@@ -261,16 +261,17 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
 
     user_id = socket.assigns.current_user.id
 
-    case {lang_res, ppl_res} do
-      {true, true} ->
-        ## this is not working 
+    case {lang_res, ppl_res, other_lang_isChecked, other_text} do
+      {true, true, true, ""} ->
+        {:noreply, put_flash(socket, :error, "Please complete Other field")} 
+      {true, true, _, _} ->
+        
         id
         |> LinkLangClassifier.Links.langClassify(is_russian_lang, is_kyrgyz_lang, is_english_lang, is_unknown_lang, is_unreachable, is_no_language, other_text)
-        ## need to add stuff to classify Ethnicity
+        
         id
         |> LinkLangClassifier.Links.pplClassify(is_slavic_ppl, is_kyrgyz_ppl, is_other_central_asian_ppl, is_caucasian_ppl, is_other_ppl, is_no_ppl, is_unreachable)
        
-        
         result = get_next_link(user_id)
         result = get_existing_video(user_id)
 

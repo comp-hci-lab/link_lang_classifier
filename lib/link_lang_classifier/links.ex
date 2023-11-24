@@ -4,7 +4,7 @@ defmodule LinkLangClassifier.Links do
   """
 
   import Ecto.Query, warn: false
-  alias LinkLangClassifier.Links.Classification
+  alias LinkLangClassifier.Links.LanguageClassification
   alias LinkLangClassifier.Repo
 
   alias LinkLangClassifier.Links.Link
@@ -98,7 +98,7 @@ defmodule LinkLangClassifier.Links do
     
     '''
     Link
-    |> join(:left, [l], c in Classification, on: c.link_id == l.id and l.classifier_id == ^user_id)
+    |> join(:left, [l], c in LanguageClassification, on: c.link_id == l.id and l.classifier_id == ^user_id)
     |> where([l, c], is_nil(c.id))
     |> select([l,c], l)
     |> order_by(fragment("RANDOM()"))
@@ -108,7 +108,7 @@ defmodule LinkLangClassifier.Links do
           
     # query = select * from links l left join classifications c on c.link_id=l.id where l.classifier_id=1 and c.link_id is null;
     query = from l in Link, 
-      left_join: c in Classification, on: c.link_id==l.id,
+      left_join: c in LanguageClassification, on: c.link_id==l.id,
       where: (l.classifier_id==^user_id) and (is_nil(c.link_id)),
       order_by: (fragment("RANDOM()")),
       limit: 1
@@ -116,10 +116,10 @@ defmodule LinkLangClassifier.Links do
 
   end
 
-  def classify(id, lang) do
-    %Classification{}
-    |> Classification.changeset(%{"category" => lang, "link_id"=>id})
-    |> Repo.insert()
+  def langClassify(id, is_russian, is_kyrgyz, is_english, is_unknown, is_unreachable, is_no_language, other_lang) do
+    %LanguageClassification{}
+    |> LanguageClassification.changeset(%{"is_russian" => is_russian, "is_kyrgyz" => is_kyrgyz, "is_english" => is_english, "is_unknown" => is_unknown, "is_unreachable" => is_unreachable, "is_no_language" => is_no_language, "other_lang" => other_lang, "link_id"=>id})
+    |> Repo.insert!()
   end
 
   @doc """
@@ -149,7 +149,7 @@ defmodule LinkLangClassifier.Links do
 
   """
   def count_classifications(user_id) do
-    query = from c in Classification, 
+    query = from c in LanguageClassification, 
       join: l in Link, on: c.link_id == l.id,
       where: l.classifier_id == ^user_id
     length(Repo.all(query))

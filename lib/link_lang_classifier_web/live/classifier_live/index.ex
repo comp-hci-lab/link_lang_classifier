@@ -62,7 +62,7 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
       link
     else
       link.id
-      |> LinkLangClassifier.Links.classify("non_exist")
+      |> LinkLangClassifier.Links.langClassify(false, false, false, false, true, false, "")
 
       get_existing_video(user_id)
     end
@@ -238,52 +238,37 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
     {id, _} = Integer.parse(id)
 
     langs = socket.assigns.langs
-
-    res =
-      langs
-      |> Enum.filter(fn {_, %{is_checked: checked_value}} ->
-        checked_value
-      end)
-      |> Enum.map(fn {x, _} -> x end)
-      |> Enum.sort()
-      |> Enum.join("/")
-
-    no_lang_isChecked = socket.assigns.no_lang_isChecked
-    unreachable_isChecked = socket.assigns.unreachable_isChecked
-    res = if no_lang_isChecked, do: "none", else: res
-    res = if unreachable_isChecked, do: "unreachable", else: res
-
+    is_russian_lang = langs["ru"][:is_checked]
+    is_kyrgyz_lang = langs["kg"][:is_checked]
+    is_english_lang = langs["en"][:is_checked]
+    is_unknown_lang = langs["unknown"][:is_checked]
+    is_no_language = socket.assigns.no_lang_isChecked
+    is_unreachable = socket.assigns.unreachable_isChecked
     other_lang_isChecked = socket.assigns.other_lang_isChecked
-    res = if other_lang_isChecked && res != "", do: res <> "|" <> socket.assigns.text_value, else: res
-    res = if other_lang_isChecked && res == "", do: socket.assigns.text_value, else: res
+    other_text = socket.assigns.text_value
+
+    lang_res = is_russian_lang or is_english_lang or is_kyrgyz_lang or is_unknown_lang or is_no_language or is_unreachable or other_lang_isChecked 
 
     ppl = socket.assigns.ppl
+    is_slavic_ppl = ppl["sl"][:is_checked] 
+    is_kyrgyz_ppl = ppl["kg"][:is_checked]
+    is_other_central_asian_ppl = ppl["oca"][:is_checked]
+    is_caucasian_ppl = ppl["pcau"][:is_checked]
+    is_other_ppl = ppl["unknown"][:is_checked]
+    is_no_ppl = socket.assigns.no_people_isChecked
 
-    ppl_res =
-      ppl
-      |> Enum.filter(fn {_, %{is_checked: checked_value}} ->
-        checked_value
-      end)
-      |> Enum.map(fn {x, _} -> x end)
-      |> Enum.sort()
-      |> Enum.join("/")
-    ppl_res = if socket.assigns.no_people_isChecked, do: "none", else: ppl_res
-
-    res = if res != "", do: res <> "[]" <> ppl_res
+    ppl_res = is_slavic_ppl or is_kyrgyz_ppl or is_other_central_asian_ppl or is_caucasian_ppl or is_other_ppl or is_no_ppl or is_unreachable
 
     user_id = socket.assigns.current_user.id
 
-    case res do
-      "" ->
-        {:noreply, put_flash(socket, :error, "Language is not chosen")}
-
-      lang ->
+    case {lang_res, ppl_res} do
+      {true, true} ->
+        ## this is not working 
         id
-
-        |> LinkLangClassifier.Links.classify(lang)
+        |> LinkLangClassifier.Links.langClassify(is_russian_lang, is_kyrgyz_lang, is_english_lang, is_unknown_lang, is_unreachable, is_no_language, other_text)
+        ## need to add stuff to classify Ethnicity
+        
         result = get_next_link(user_id)
-
-
         result = get_existing_video(user_id)
 
         new_links_count = count_progress(user_id)
@@ -292,6 +277,10 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
         Process.send_after(self(), {:time_up, true}, @submit_button_wait_ms)
 
         {:noreply, assign(socket, link: result, langs: @default_lang_map, ppl: @default_ethnicity_map, payment_count: new_payment_count, links_count: new_links_count, other_lang_isChecked: false, no_lang_isChecked: false, unreachable_isChecked: false, text_value: "", no_people_isChecked: false, time_up: false)}
+      
+      _ ->
+        {:noreply, put_flash(socket, :error, "Please select options")}
+
     end
   end
 

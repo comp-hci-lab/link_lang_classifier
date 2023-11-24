@@ -5,6 +5,7 @@ defmodule LinkLangClassifier.Links do
 
   import Ecto.Query, warn: false
   alias LinkLangClassifier.Links.LanguageClassification
+  alias LinkLangClassifier.Links.EthnicityClassification
   alias LinkLangClassifier.Repo
 
   alias LinkLangClassifier.Links.Link
@@ -114,6 +115,12 @@ defmodule LinkLangClassifier.Links do
       limit: 1
     Repo.one(query)
 
+  end
+
+  def pplClassify(id, is_slavic, is_kyrgyz, is_other_central_asian, is_caucasian, is_other, is_no_people, is_unreachable) do
+    %EthnicityClassification{}
+    |> EthnicityClassification.changeset(%{"is_slavic" => is_slavic, "is_kyrgyz" => is_kyrgyz, "is_other_central_asian" => is_other_central_asian, "is_caucasian" => is_caucasian, "is_other" => is_other, "is_no_people" => is_no_people, "is_unreachable" => is_unreachable, "link_id"=>id})
+    |> Repo.insert!()
   end
 
   def langClassify(id, is_russian, is_kyrgyz, is_english, is_unknown, is_unreachable, is_no_language, other_lang) do

@@ -156,12 +156,13 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
 
     value_checked = Map.get(params, :is_checked)
     no_people_isChecked = if value_checked, do: socket.assigns.no_people_isChecked, else: false
+    unreachable_isChecked = if value_checked, do: socket.assigns.unreachable_isChecked, else: false
 
     new_params = Map.put(params, :is_checked, !value_checked)
 
     new_ppl = Map.put(ppl, pick, new_params)
 
-    {:noreply, assign(socket, ppl: new_ppl, no_people_isChecked: no_people_isChecked)}
+    {:noreply, assign(socket, ppl: new_ppl, no_people_isChecked: no_people_isChecked, unreachable_isChecked: unreachable_isChecked)}
   end
 
   def handle_event("other-event", %{"value" => other_text}, socket) do
@@ -195,12 +196,18 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
     other_lang_isChecked = if unreachable_isChecked, do: false, else: socket.assigns.other_lang_isChecked
     no_lang_isChecked = if unreachable_isChecked, do: false, else: socket.assigns.no_lang_isChecked
     langs = if unreachable_isChecked, do: @default_lang_map, else: socket.assigns.langs
+    no_people_isChecked = if unreachable_isChecked, do: false, else: socket.assigns.no_people_isChecked
+    ppl = if unreachable_isChecked, do: @default_ethnicity_map, else: socket.assigns.ppl
+    
+
 
     {:noreply,
      assign(socket,
        other_lang_isChecked: other_lang_isChecked,
        no_lang_isChecked: no_lang_isChecked,
        unreachable_isChecked: unreachable_isChecked,
+       no_people_isChecked: no_people_isChecked,
+       ppl: ppl,
        langs: langs
      )}
   end
@@ -209,11 +216,14 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
     socket = clear_flash(socket)
     no_people_isChecked = not socket.assigns.no_people_isChecked
     ppl = if no_people_isChecked, do: @default_ethnicity_map, else: socket.assigns.langs
+    unreachable_isChecked = if no_people_isChecked, do: false, else: socket.assigns.unreachable_isChecked
+
 
     {:noreply,
      assign(socket,
        no_people_isChecked: no_people_isChecked,
-       ppl: ppl
+       ppl: ppl,
+       unreachable_isChecked: unreachable_isChecked 
      )}
   end
 

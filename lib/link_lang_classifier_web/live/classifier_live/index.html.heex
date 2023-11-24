@@ -127,6 +127,16 @@
         >
           No People Present
         </button>
+        <button
+          phx-click="unreachable-btn-event"
+          class={[
+            "choice-button",
+            @unreachable_isChecked &&
+              "ring-green-300 shadow-green-200 hover:shadow-green-200 bg-green-600 hover:bg-green-700"
+          ]}
+        >
+          Video Unavailable
+        </button> 
       </div>
 
       <button

@@ -38,7 +38,7 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
         no_people_isChecked: false,
         time_up: false
       )
-      
+
 
     {:ok, socket, layout: false}
   end
@@ -62,7 +62,7 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
       link
     else
       link.id
-      |> LinkLangClassifier.Links.langClassify(false, false, false, false, true, false, "")
+      |> LinkLangClassifier.Links.langClassify(false, false, false, false, false, false, "deleted")
 
       get_existing_video(user_id)
     end
@@ -89,10 +89,10 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
   end
 
 
-  def count_progress(user_id) do 
+  def count_progress(user_id) do
     num_links = LinkLangClassifier.Links.count_links(user_id)
     num_links = if num_links == 0, do: 1, else: num_links
-    (LinkLangClassifier.Links.count_classifications(user_id) / num_links) * 100 
+    (LinkLangClassifier.Links.count_classifications(user_id) / num_links) * 100
         |> Decimal.from_float()
         |> Decimal.round(2)
   end
@@ -198,7 +198,7 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
     langs = if unreachable_isChecked, do: @default_lang_map, else: socket.assigns.langs
     no_people_isChecked = if unreachable_isChecked, do: false, else: socket.assigns.no_people_isChecked
     ppl = if unreachable_isChecked, do: @default_ethnicity_map, else: socket.assigns.ppl
-    
+
 
 
     {:noreply,
@@ -223,7 +223,7 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
      assign(socket,
        no_people_isChecked: no_people_isChecked,
        ppl: ppl,
-       unreachable_isChecked: unreachable_isChecked 
+       unreachable_isChecked: unreachable_isChecked
      )}
   end
 
@@ -247,10 +247,10 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
     other_lang_isChecked = socket.assigns.other_lang_isChecked
     other_text = socket.assigns.text_value
 
-    lang_res = is_russian_lang or is_english_lang or is_kyrgyz_lang or is_unknown_lang or is_no_language or is_unreachable or other_lang_isChecked 
+    lang_res = is_russian_lang or is_english_lang or is_kyrgyz_lang or is_unknown_lang or is_no_language or is_unreachable or other_lang_isChecked
 
     ppl = socket.assigns.ppl
-    is_slavic_ppl = ppl["sl"][:is_checked] 
+    is_slavic_ppl = ppl["sl"][:is_checked]
     is_kyrgyz_ppl = ppl["kg"][:is_checked]
     is_other_central_asian_ppl = ppl["oca"][:is_checked]
     is_caucasian_ppl = ppl["pcau"][:is_checked]
@@ -263,15 +263,15 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
 
     case {lang_res, ppl_res, other_lang_isChecked, other_text} do
       {true, true, true, ""} ->
-        {:noreply, put_flash(socket, :error, "Please complete Other field")} 
+        {:noreply, put_flash(socket, :error, "Please complete Other field")}
       {true, true, _, _} ->
-        
+
         id
         |> LinkLangClassifier.Links.langClassify(is_russian_lang, is_kyrgyz_lang, is_english_lang, is_unknown_lang, is_unreachable, is_no_language, other_text)
-        
+
         id
         |> LinkLangClassifier.Links.pplClassify(is_slavic_ppl, is_kyrgyz_ppl, is_other_central_asian_ppl, is_caucasian_ppl, is_other_ppl, is_no_ppl, is_unreachable)
-       
+
         result = get_next_link(user_id)
         result = get_existing_video(user_id)
 
@@ -281,7 +281,7 @@ defmodule LinkLangClassifierWeb.ClassifierLive.Index do
         Process.send_after(self(), {:time_up, true}, @submit_button_wait_ms)
 
         {:noreply, assign(socket, link: result, langs: @default_lang_map, ppl: @default_ethnicity_map, payment_count: new_payment_count, links_count: new_links_count, other_lang_isChecked: false, no_lang_isChecked: false, unreachable_isChecked: false, text_value: "", no_people_isChecked: false, time_up: false)}
-      
+
       _ ->
         {:noreply, put_flash(socket, :error, "Please select options")}
 
